@@ -75,6 +75,8 @@ class NoseCone(FixedMass, BodyComponent):
         self.length = self.aspectRatio * self.baseDiameter
         ''' Length from tip to tail, of external surface (m) '''
 
+        self.C = componentDictReader.tryGetFloat("C", defaultValue=0.0)
+
         self.shape = componentDictReader.getString("shape")
         ''' Description of nosecone shape - something like 'Ogive' or 'Cone' '''
         
@@ -85,6 +87,9 @@ class NoseCone(FixedMass, BodyComponent):
 
     def _precomputeGeometry(self):
         self.length = self.baseDiameter * self.aspectRatio
+
+        if self.shape == "Haack": self.haackX, self.haackR = self._getHaackProfile()
+        
         self.volume = self._getVolume()
         self.planformArea = self._getPlanformArea()
         self.wettedArea = self._getWettedArea()
@@ -99,6 +104,7 @@ class NoseCone(FixedMass, BodyComponent):
 
         self.SubsonicCdPolyCoeffs = computeSubsonicPolyCoeffs(self.coneHalfAngle)
         self.TransonicCdPolyCoeffs = computeTransonicPolyCoeffs(self.coneHalfAngle)
+
 
     def _getVolume(self):
 
@@ -130,9 +136,15 @@ class NoseCone(FixedMass, BodyComponent):
             # Exact for an LD-Haack (Von Karman) profile
             return math.pi * (self.baseDiameter/2)**2 * self.length / 2
 
-        elif self.shape == "Eos Von Karman":
         # from desmos Volume
             return 0.00676723
+        
+        elif self.shape == "Haack":
+            R = self.baseDiameter/2
+            L = self.length
+            C = self.C
+
+            return math.pi * R**2 * L * (3*C + 8) / 16
 
         else:
             raise TypeError("The nosecone shape {} is not recognized".format(self.shape))
@@ -164,7 +176,13 @@ class NoseCone(FixedMass, BodyComponent):
         elif self.shape == "Eos Von Karman":
             # from desmos planform area
             return  0.0671988
+        
+        elif self.shape == "Haack":
+            x = self.haackX
+            r = self.haackR
 
+            dx = np.diff(x)
+            return np.sum((r[:-1] + r[1:]) * dx)
 
         else:
             raise TypeError("The nosecone shape {} is not recognized".format(self.shape))
@@ -204,7 +222,17 @@ class NoseCone(FixedMass, BodyComponent):
         elif self.shape == "Eos Von Karman":
             # from desmos wetted area
             return 0.212512
-                    
+        
+        elif self.shape == "Haack":
+
+            x = self.haackX
+            r = self.haackR
+
+            dx = np.diff(x)
+            dr = np.diff(r)
+            slantlength = np.sqrt(dx**2 + dr**2)
+            return np.sum(math.pi * (r[:-1] + r[1:]) * slantlength)
+
 
         else:
             raise TypeError("The nosecone shape {} is not recognized".format(self.shape))
@@ -215,6 +243,22 @@ class NoseCone(FixedMass, BodyComponent):
         x = self.length / 2 * (1 - np.cos(theta))
         r = self.baseDiameter / (2*math.sqrt(math.pi)) * np.sqrt(theta - np.sin(2*theta)/2)
         return x, r
+    
+    def _getHaackProfile(self, numPoints = 2001):
+        ''' Returns (x,r) arrays along  '''
+        R = self.baseDiameter / 2.0
+        L = self.length
+        C = self.C
+
+        theta = np.linspace(0, math.pi, numPoints)
+        sin_theta = np.sin(theta)
+        cos_theta = np.cos(theta)
+
+        x = L / 2.0 * (1.0 - cos_theta)
+        Q = (theta - sin_theta * cos_theta + C * sin_theta **3)
+        r = R / math.sqrt(math.pi) * np.sqrt(Q)
+
+        return x,r
 
     #### Operation Functions ####
     def getAppliedForce(self, rocketState, time, environment, CG):

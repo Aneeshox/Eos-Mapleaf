@@ -100,7 +100,8 @@ NoseConeShell+Coupler{
 	position			(0 0 0)
 	cg			(0 0 -0.7159) # kept 0.098 m behind the shoulder (-0.6179), same as Aegis
 	aspectRatio			3.7 # 0.6179 m long #3 Aegis
-	shape			Eos Von Karman
+	shape			Haack
+	C               0.0
 	surfaceRoughness			0.000007
 	testvariable				1
 	}
