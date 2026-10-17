@@ -80,3 +80,11 @@ def get_flutter_velocity(aMaxV: float = DEFAULT_A_MAX_V, lsa: float = DEFAULT_LS
 
 def get_safety_margin(flutter_velocity: float, maxV: float) -> float:
     return flutter_velocity - maxV
+
+
+# (Example usage) @gio pls write a unit test for this function
+if __name__ == "__main__":
+    flutter_velocity = get_flutter_velocity()
+    safety_margin = get_safety_margin(flutter_velocity, DEFAULT_MAX_V)
+    print(f"Flutter Velocity: {flutter_velocity:.2f} m/s")
+    print(f"Safety Margin: {safety_margin:.2f} m/s")
