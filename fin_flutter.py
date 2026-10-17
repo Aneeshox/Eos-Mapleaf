@@ -12,7 +12,7 @@ DEFAULT_M: float = 11.67 # cm - Fin sweep length
 DEFAULT_TC: float = 9.0 # cm - Tip chord length
 DEFAULT_RC: float = 25.0 # cm - Root chord length
 DEFAULT_SSL: float = 8.5 # cm - Semi span length (height)
-DEFAULT_GE: float = 420_000 # kPa - Shear Modulus (doubled in calculation if tip-to-tip reinforcement)
+DEFAULT_GE: float = 2770400.76795#420_000 # kPa - Shear Modulus (doubled in calculation if tip-to-tip reinforcement)
 
 # Other Constants
 DEFAULT_P0: float = 101.325 # kPa - Air pressure at sea level
