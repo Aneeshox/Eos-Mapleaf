@@ -40,20 +40,20 @@ def get_flutter_velocity(aMaxV: float = DEFAULT_A_MAX_V, lsa: float = DEFAULT_LS
         float: The calculated flutter velocity in m/s.
     """
 
-    # Gets the air temperature based on the given altitude
-    # Requires an altitude in meters and returns a temp in deg C
-    def getTemp(altitude: float) -> float:
+    # Gets the air temperature based on the given altitude above the launch site
+    # Requires an altitude in meters (AGL) and returns a temp in deg C
+    def getTemp(altitudeAGL: float) -> float:
         """
         Calculates the air temperature in degrees Celsius at a given altitude using the standard lapse rate.
 
         Parameters:
-            altitude (float): Altitude in meters.
-        
+            altitudeAGL (float): Altitude above the launch site in meters (tls is measured at the launch site).
+
         Returns:
             float: Air temperature in degrees Celsius at the given altitude.
         """
 
-        return tls - 0.0065 * altitude
+        return tls - 0.0065 * altitudeAGL
 
     #! Update this to account for different fin shapes (assumes trapezoidal)
     cx = (2 * tc * m + tc ** 2 + m * rc + tc * rc + rc ** 2) / (3 * (tc + rc)) # cm - x coordinate of centroid of the trapezoidal fin (center of mass)
@@ -65,9 +65,9 @@ def get_flutter_velocity(aMaxV: float = DEFAULT_A_MAX_V, lsa: float = DEFAULT_LS
     eps = cx / rc - 0.25 # no units - The distance from the fin's center of mass to the fin quarter chord as a ratio of the full chord length
     DN = (24 * eps * k * p0) / math.pi # kPa - Denominator constant for flutter velocity calculation
     aMaxVAbsolute = lsa + aMaxV # m - Predicted altitude at predicted maximum rocket velocity as an absolute altitude (accounting for lsa)
-    tempAtMaxV = getTemp(aMaxVAbsolute) # deg C - Air temperature at predicted maximum rocket velocity
-    a = 20.05 * math.sqrt(273.16 + getTemp(aMaxVAbsolute)) # m/s - Speed of sound at aMaxV
-    p = 101.325 * ((getTemp(aMaxVAbsolute) + 273.16) / 288.16) ** 5.256 # kPa - Air pressure at aMaxV
+    tempAtMaxV = getTemp(aMaxV) # deg C - Air temperature at predicted maximum rocket velocity
+    a = 20.05 * math.sqrt(273.15 + tempAtMaxV) # m/s - Speed of sound at aMaxV
+    p = p0 * (1 - 0.0065 * aMaxVAbsolute / 288.15) ** 5.256 # kPa - Air pressure at aMaxV (standard atmosphere, ASL altitude)
     term1 = (DN * (asr ** 3)) / ((thr ** 3) * (asr + 2)) # KPa - First section in the denominator
     term2 = (tar + 1) / 2 # no units - Second section in the denominator
     term3 = p / p0 # no units - Third section in the denominator
