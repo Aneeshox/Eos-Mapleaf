@@ -71,15 +71,15 @@ def get_flutter_velocity(aMaxV: float = DEFAULT_A_MAX_V, lsa: float = DEFAULT_LS
     term1 = (DN * (asr ** 3)) / ((thr ** 3) * (asr + 2)) # KPa - First section in the denominator
     term2 = (tar + 1) / 2 # no units - Second section in the denominator
     term3 = p / p0 # no units - Third section in the denominator
-    flutter_velocity: float
+    fv: float
     if useTipToTip:
-        flutter_velocity = a * math.sqrt(gE * 2 / (term1 * term2 * term3))
+        fv = a * math.sqrt(gE * 2 / (term1 * term2 * term3))
     else:
-        flutter_velocity = a * math.sqrt(gE / (term1 * term2 * term3))
-    return flutter_velocity
+        fv = a * math.sqrt(gE / (term1 * term2 * term3))
+    return fv
 
-def get_safety_margin(flutter_velocity: float, maxV: float) -> float:
-    return flutter_velocity - maxV
+def get_safety_margin(fv: float, maxV: float) -> float:
+    return fv - maxV
 
 
 # TODO (Example usage) @gio pls write a unit test for this function
