@@ -1,3 +1,6 @@
+"""Calculated fin flutter
+"""
+
 import math
 
 # Launche Site Data
@@ -35,7 +38,7 @@ def get_flutter_velocity(aMaxV: float = DEFAULT_A_MAX_V, lsa: float = DEFAULT_LS
         p0 (float): Air pressure at sea level in kPa.
         k (float): Ratio of specific heats for air (dimensionless).
         useTipToTip (bool, default=True): Whether to account for tip-to-tip reinforcement.
-    
+        
     Returns:
         float: The calculated flutter velocity in m/s.
     """
@@ -79,6 +82,15 @@ def get_flutter_velocity(aMaxV: float = DEFAULT_A_MAX_V, lsa: float = DEFAULT_LS
     return fv
 
 def get_safety_margin(fv: float, maxV: float) -> float:
+    """_summary_
+
+    Args:
+        fv (float): _description_
+        maxV (float): _description_
+
+    Returns:
+        float: _description_
+    """
     return fv - maxV
 
 
