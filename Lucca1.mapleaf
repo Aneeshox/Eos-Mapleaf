@@ -14,7 +14,7 @@ SimControl{
     loggingLevel    2 #0# 2 #0 #2
     RocketPlot      On
 
-    plot    FlightAnimation CP Mach Aero CG Position Velocity AOA Mass
+    plot    Summary FlightAnimation CP Mach Aero CG Position Velocity AOA Mass
 	}
 
 Environment{
@@ -383,7 +383,7 @@ DeltaFins{
 Motor{
         class           Motor
 		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\skib.txt
-		path			c:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\3p25-10k.txt
+		path			C:\Users\taiya\miniconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\3p25-10k.txt
 		#path		    C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\3p25-12k.txt
 		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\3p75-12k.txt
 		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\3p75-10k.txt

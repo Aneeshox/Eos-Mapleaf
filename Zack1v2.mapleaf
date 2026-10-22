@@ -13,7 +13,7 @@ SimControl{
     loggingLevel    2
     RocketPlot      On
 
-    plot    FlightAnimation CP Mach Aero CG Position Velocity 
+    plot    Summary FlightAnimation CP Mach Aero CG Position Velocity
 	}
 Environment{
     ConstantMeanWind{
@@ -280,11 +280,12 @@ MotorAssembly{
 	}
 
 
+
 Motor{
         class           Motor
-		path			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Aneeshox\motortests\athena_12s_two_phase.mapleaf.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Aneeshox\motortests\athena_12s_two_phase.mapleaf.txt
 		#path			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Aneeshox\motortests\athena_from_data_variable_flow.mapleaf.txt
-		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro4P25SBSAC.txt
+		path 			C:\Users\taiya\miniconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro4P25SBSAC.txt
 		#path			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P75SB.txt #test
 		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P625SB 2.txt
 		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\ouroboros7SecondBurn.txt
