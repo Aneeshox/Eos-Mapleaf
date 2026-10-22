@@ -1,0 +1,306 @@
+#May Launch 10k Apogee
+#MAPLEAF
+# See SimDefinitionTemplate.mapleaf for file format info & description of all options
+SimControl{
+    timeDiscretization RK45Adaptive
+    timeStep 0.01 #sec
+
+    #EndCondition Altitude#Apogee #Altitude
+	#EndConditionValue 800
+
+	EndCondition Apogee
+
+    loggingLevel    2
+    RocketPlot      On
+
+    plot    FlightAnimation CP Mach Aero CG Position Velocity 
+	}
+Environment{
+    ConstantMeanWind{
+        velocity                    ( 2 2 0 ) #m/s
+    }
+	LaunchSite{
+        elevation             890#930.58#830.58  #1100 #777.24-883.92m average is 830.58 for Midland Texas,1400.556 #m, Relative to sea level - Impacts the acceleration of gravity at launch        
+
+        # Lat / Lon only influence simulations using the 'Round' or 'WGS84' earth models
+        #latitude                49 # Degrees, 90 = North Pole, -90 = South Pole, 0 = Equator
+        #longitude               81 # Degrees, 0 = Prime Meridian (Greenwich, England), +'ve is East, -'ve is West
+
+        # A launch rail will prevent the rocket from deviating from the direction specified by Rocket.initialDirection
+            # Until it has travelled the length of the launch rail from its starting location
+            # The launch rail will also prevent downwards motion
+            # A length of 0 = no launch rail
+        railLength              12.192 #m
+
+		EarthModel                  Flat
+
+    	#### Atmospheric Properties ####
+    	# USStandardAtmosphere or Constant or TabulatedAtmosphere
+        # USStandardAtmosphere computes the exact US Standard Atmosphere
+    	AtmosphericPropertiesModel  USStandardAtmosphere
+		
+    }
+
+	TurbulenceModel             PinkNoise3D
+    turbulenceOffWhenUnderChute False # Increases time step we can take while descending
+
+    PinkNoiseModel{
+        # To set the strength of pink noise fluctuations, provide the turbulenceIntensity OR the velocityStdDeviation
+            # If both are provided, the turbulenceIntensity is used
+        turbulenceIntensity     5 # % velocity standard deviation / mean wind velocity
+        velocityStdDeviation    5 # m/s standard deviation of pink noise model
+
+        # Set the random seeds for each pink noise generator for repeatable simulations
+            # PinkNoise1D only uses 1, 2D uses 2, 3D uses all 3
+        randomSeed1             63583 # Integer
+        randomSeed2             63583 # Integer
+        randomSeed3             63583 # Integer
+    }
+
+	MeanWindModel              Constant#SampledRadioSondeData #Constant #SampledRadioSondeData
+
+	SampledRadioSondeData{
+        launchMonth             Aug # Three letter month code - uses yearly avg data if absent
+        # Place1 name, weighting coefficient 1, Place2 name, weighting coefficient 2, ... - Corresponding radio sonde data files must be in MAPLEAF/Examples/Wind
+        locationsToSample       Edmonton 1
+        locationASLAltitudes    710 638 # m ASL - Used to convert ASL altitude data provided in radio sonde files to AGL altitudes
+        randomSeed              228010 # Set to remove randomization from sampling, have a repeatable simulation
+    }
+	}
+
+Rocket{
+	name				Ouroboros
+	#initialDirection	(0 0 1)
+	rotationAxis        (0 1 0) # Any Vector, defined in launch tower ENU frame
+    rotationAngle        7 # degrees
+	position            (0 0 3) # m - initial position above ground level (AGL) of the rocket's CG. Set launch site elevation using Environment.LaunchSite.elevation
+    velocity            (0 0 0) # m/s - initial velocity
+    angularVelocity     (0 0 0) # rad/s - initial angular velocity - defined in the rocket's LOCAL frame
+
+	Aero{
+        # To turn off base drag (for comparisons to wind tunnel data), make sure the rocket doesn't include a Boat tail and set this to false
+        addZeroLengthBoatTailsToAccountForBaseDrag      true
+      
+        # Calculates skin friction based on laminar + transitional flow if not fully turbulent
+        fullyTurbulentBL                                true
+    }
+
+    FirstStage{
+        class           Stage
+		stageNumber		1
+		position            (0 0 0) #m - Position of stage tip, relative to tip of rocket
+
+NoseConeShell{
+	class			Nosecone
+	mass			0#1 for steel
+	baseDiameter			0.1524
+	position			(0 0 0)
+	cg			(0 0 -0.03)#-0.22)
+	aspectRatio			2.9856
+	shape			Ouroboros Von Karman
+	surfaceRoughness			0.000007
+	testvariable			1
+	}
+
+NoseConeTube{
+	class	Bodytube
+	mass	0.0
+	length	0.238
+	position	(0 0 -0.455)
+	cg	(0 0 -0.1)
+	outerDiameter	0.1524
+	surfaceRoughness	0.000007
+	}
+
+intermediateTube{
+	class			Bodytube
+	mass			0.0
+	outerDiameter			0.1524
+	position			(0 0 -0.693)
+	cg			(0 0 -0.1857)
+	surfaceRoughness			0.000007
+	length			0.3747
+	}
+
+
+RecoveryTube{
+	class			Bodytube
+	mass			0
+	outerDiameter			0.1524
+	position			(0 0 -1.0677)
+	cg			(0 0 -0.3)
+	surfaceRoughness			0.000007
+	length			0.6096
+	}
+
+RecoverySystem{
+		class			RecoverySystem
+		mass			0
+		position		(0 0 -0.8509)#estimate
+		cg			(0 0 -0.065)
+		numStages 		2
+		stage1Trigger       Apogee # Apogee, Time, Altitude
+        stage1ChuteArea     4.67 # m^2
+        stage1Cd            1.5 # Drag Coefficient (~0.75-0.8 for flat sheet, 1.5-1.75 for domed chute)
+        stage1DelayTime     0.1 #s
+		stage2Trigger       Altitude # Apogee, Time, Altitude
+		stage2TriggerValue	1307.2#1807.2
+        stage2ChuteArea     23.64 # m^2
+        stage2Cd            1.5 # Drag Coefficient (~0.75-0.8 for flat sheet, 1.5-1.75 for domed chute)
+        stage2DelayTime     0.1 #s
+
+	}
+
+AvionicsTube{
+	class			Bodytube
+	mass			0.0
+	outerDiameter			0.1524
+	position			(0 0 -1.6773)
+	cg			(0 0 -0.26)
+	surfaceRoughness			0.000007
+	length			0.58
+	}
+
+AvionicsBay{
+	class			Mass
+	mass			0
+	position		(0 0 -2)
+	cg				(0 0 0)
+	MOI				(0.0118241136 0.0118241136 0.007016506973)#all old data
+	}
+
+Payload{
+	class			Mass
+	mass			0
+	position			(0 0 -1.85)
+	cg			(0 0 -0.1)
+	MOI			(0.00035239 0.00191101 0.00222428)
+	}
+
+
+UpperCasing{
+	class			Bodytube
+	mass			0.0
+	outerDiameter			0.1524
+	position			(0 0 -2.2573)
+	cg			(0 0 -0.03)
+	surfaceRoughness			0.000007
+	length			0.05715
+	}
+
+
+UpperTransition{
+	class           Transition
+    mass            0.0
+    position        (0 0 -2.31445) # Position of top, center of diameter change
+    cg              (0 0 -0.009000066667)
+    MOI             (0.01 0.01 0.0001) # need to ask
+
+    length          0.025 # m
+    startDiameter   0.1524 # m, Diameter at top
+    endDiameter     0.142875 # m, Diameter at bottom
+    surfaceRoughness 0.0000070 # m
+	}
+
+
+PVTube{
+	class			Bodytube
+	mass					57 #48.76952094 #51.7#`mass sims set: (49.9 - random app.) (subtract fuel grain, 2.93 = 48.76952094)
+	outerDiameter			0.142875
+	position			(0 0 -2.33945) 
+	cg			(0 0 -0.55615)#(0 0 -0.53055) #(0 0 -0.5652) (0 0 -0.55615)
+	surfaceRoughness			0.000143#0.000007
+	length			1.66
+	}
+
+
+
+# to find oxidizor fill mass, take Mapleaf generated wet mass - dry mass + unburnt (1.24kg) - fuel grain (6.4606lbs or 2.93kg) (this is because it is double counted) 
+
+
+
+
+LowerTransition{
+	class           Transition
+    mass            0.0 #confirm
+    position        (0 0 -3.99945) # Position of top, center of diameter change
+    cg              (0 0 -0.0561848)
+    MOI             (0.01 0.01 0.0001) # need to ask
+
+    length          0.0842772 # m
+    startDiameter   0.142875 # m, Diameter at top
+    endDiameter     0.168 # m, Diameter at bottom
+    surfaceRoughness 0.0000070 # m
+	}
+
+Fins{
+	class			FinSet
+	mass			0
+	position			(0 0 -4.492)
+	cg			(0 0 -0.18)
+	numFins			3
+	finCantAngle			0
+	firstFinAngle			0
+	sweepAngle			40.7
+	rootChord			0.36
+	tipChord			0.119
+	span			0.14
+	thickness			0.009906
+	surfaceRoughness			0.000007
+
+    LeadingEdge{
+        shape         Round # Blunt or Round (Even sharp edges always have a small radius)
+        #thickness     0.00931 # Used for 'Blunt' edge
+        radius        0.00211 # Used for 'Round' edge
+    }
+
+    TrailingEdge{
+        shape         Round # Tapered (0 base drag), Round (1/2 base drag), Blunt (full base drag)
+        #thickness     0.001 # Used for 'Blunt' edge
+        radius        0.00211 # Used for 'Round' edge
+    }
+	}
+
+FinCan{
+	class			Bodytube
+	mass			0
+	outerDiameter			0.168
+	position			(0 0 -4.0837)
+	cg			(0 0 -0.48)
+	surfaceRoughness			0.000007
+	length			0.868
+	}
+
+MotorAssembly{
+	class			Mass
+	mass			0
+	position			(0 0 -4.7347)
+	cg			(0 0 0)
+	MOI			(0.02000356 0.1329268 0.1329268)
+	}
+
+
+Motor{
+        class           Motor
+		path			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Aneeshox\motortests\athena_12s_two_phase.mapleaf.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Aneeshox\motortests\athena_from_data_variable_flow.mapleaf.txt
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro4P25SBSAC.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P75SB.txt #test
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P625SB 2.txt
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\ouroboros7SecondBurn.txt
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P625SB 2.txt
+		#path			 C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P625SB 1.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\OuroSF25SB.txt			
+    	#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro3SB.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\MayMotor.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro4SBSAC.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\pls.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro3P75SB.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro3P625SB.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro11SB.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\SACMotor.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro8SB.txt
+
+	}
+	}
+	}

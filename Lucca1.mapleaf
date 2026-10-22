@@ -1,0 +1,425 @@
+#May Launch 10k Apogee
+#MAPLEAF
+#Aneesh Bungay & Lucca Conforto
+# See SimDefinitionTemplate.mapleaf for file format info & description of all options
+SimControl{
+    timeDiscretization RK45Adaptive
+    timeStep 0.01 #sec
+
+    #  EndCondition Altitude#Apogee #Altitude
+	#  EndConditionValue 800
+
+	 EndCondition Apogee
+
+    loggingLevel    2 #0# 2 #0 #2
+    RocketPlot      On
+
+    plot    FlightAnimation CP Mach Aero CG Position Velocity AOA Mass
+	}
+
+Environment{
+    ConstantMeanWind{
+        velocity        ( 2 1 0 )
+    }
+
+	LaunchSite{
+        elevation             871.603032#890#930.58#830.58  #1100 #777.24-883.92m average is 830.58 for Midland Texas,1400.556 #m, Relative to sea level - Impacts the acceleration of gravity at launch        
+
+        # Lat / Lon only influence simulations using the 'Round' or 'WGS84' earth models
+        #latitude                49 # Degrees, 90 = North Pole, -90 = South Pole, 0 = Equator
+        #longitude               81 # Degrees, 0 = Prime Meridian (Greenwich, England), +'ve is East, -'ve is West
+
+        # A launch rail will prevent the rocket from deviating from the direction specified by Rocket.initialDirection
+            # Until it has travelled the length of the launch rail from its starting location
+            # The launch rail will also prevent downwards motion
+            # A length of 0 = no launch rail
+        railLength              12.192 #m
+
+		EarthModel                  Flat
+
+    	#### Atmospheric Properties ####
+    	# USStandardAtmosphere or Constant or TabulatedAtmosphere
+        # USStandardAtmosphere computes the exact US Standard Atmosphere
+    	AtmosphericPropertiesModel  USStandardAtmosphere
+		
+    }
+
+	TurbulenceModel             PinkNoise3D
+    turbulenceOffWhenUnderChute False # Increases time step we can take while descending
+
+    PinkNoiseModel{
+        # To set the strength of pink noise fluctuations, provide the turbulenceIntensity OR the velocityStdDeviation
+            # If both are provided, the turbulenceIntensity is used
+        turbulenceIntensity     5 # % velocity standard deviation / mean wind velocity
+        velocityStdDeviation    5 # m/s standard deviation of pink noise model
+
+        # Set the random seeds for each pink noise generator for repeatable simulations
+            # PinkNoise1D only uses 1, 2D uses 2, 3D uses all 3
+        randomSeed1             63583 # Integer
+        randomSeed2             63583 # Integer
+        randomSeed3             63583 # Integer
+    }
+
+	MeanWindModel              Constant#SampledRadioSondeData #Constant #SampledRadioSondeData
+
+	SampledRadioSondeData{
+        launchMonth             Aug # Three letter month code - uses yearly avg data if absent
+        # Place1 name, weighting coefficient 1, Place2 name, weighting coefficient 2, ... - Corresponding radio sonde data files must be in MAPLEAF/Examples/Wind
+        locationsToSample       Edmonton 1
+        locationASLAltitudes    710 638 # m ASL - Used to convert ASL altitude data provided in radio sonde files to AGL altitudes
+        randomSeed              228010 # Set to remove randomization from sampling, have a repeatable simulation
+    }
+	}
+
+Rocket{
+	name				Aegis
+	#initialDirection	(0 0 1)
+	rotationAxis        (0 1 0) # Any Vector, defined in launch tower ENU frame
+    rotationAngle        4 # degrees
+	position            (0 0 3) # m - initial position above ground level (AGL) of the rocket's CG. Set launch site elevation using Environment.LaunchSite.elevation
+    velocity            (0 0 0) # m/s - initial velocity
+    angularVelocity     (0 0 0) # rad/s - initial angular velocity - defined in the rocket's LOCAL frame
+
+	Aero{
+        # To turn off base drag (for comparisons to wind tunnel data), make sure the rocket doesn't include a Boat tail and set this to false
+        addZeroLengthBoatTailsToAccountForBaseDrag      True
+      
+        # Calculates skin friction based on laminar + transitional flow if not fully turbulent
+        fullyTurbulentBL                                true
+	}
+
+    FirstStage{
+        class           Stage
+		stageNumber		1
+		position            (0 0 0) #m - Position of stage tip, relative to tip of rocket
+	
+NoseConeShell+Coupler{
+	class			Nosecone
+	mass			1.722#1 for steel
+	baseDiameter			0.167 #0.1524
+	position			(0 0 0)
+	cg			(0 0 -0.599)
+	aspectRatio			3 #2.70836571429 #19.5 inch nosecone/ w 11 inch
+	shape			Aegis Von Karman
+	surfaceRoughness			0.000007
+	testvariable			1
+	}
+
+NoseConeTip{
+		class			Mass
+		mass			0.497
+		position		(0 0 0)
+		cg				(0 0 -0.081)
+		MOI 			(0.0004 0.0004 0.0002)
+	}
+
+Payload{
+		class			Mass
+		mass			2.95
+		position		(0 0 -0.46658)
+		cg				(0 0 -0.08242)
+		MOI 			(0.03486 0.03485 0.00780)
+	}
+
+Ballast{
+		class			Mass
+		mass			0 #might need idk yet
+		position		(0 0 -0.46658)
+		cg				( 0 0 0)
+		#MOI				(0.01891858177 0.01891858177 0.01122641116)
+	}
+
+Noseconetube{
+		length			0.2737
+		class			Bodytube
+		cg			(0 0 -0.3048)
+		position	(0 0 -0.501)
+		mass			0 #0.997903214
+		outerDiameter		0.167
+		surfaceRoughness	0.000007
+	}
+
+RecoveryTube{
+		length			0.30861
+		class			Bodytube
+		cg			(0 0 -0.154305)
+		position	(0 0 -0.7747)
+		mass			0.32 #0.997903214
+		outerDiameter		0.167
+		surfaceRoughness	0.000007
+	}
+Chutes{
+		class			Mass
+		mass			3.741
+		cg			(0 0 -0.154305)
+		position	(0 0 -0.7747)
+		MOI				(0.00567557453 0.00567557453 0.003367923348)#each mass component is modeled as a solid cylinder with diam 0.15m and length 0.2m
+	}
+
+RecoverySystem{
+		class			RecoverySystem
+		mass			1.415
+		position		(0 0 0)
+		cg				(0 0 -1.0448)
+		numStages 		2
+		stage1Trigger       Apogee # Apogee, Time, Altitude
+        stage1ChuteArea     4.67 # m^2
+        stage1Cd            0.97 #1.5 # Drag Coefficient (~0.75-0.8 for flat sheet, 1.5-1.75 for domed chute)
+        stage1DelayTime     0.1 #s
+		stage2Trigger       Altitude # Apogee, Time, Altitude
+		stage2TriggerValue	1307.2#1807.2
+        stage2ChuteArea     18.679 #23.64 # m^2
+        stage2Cd            2.2 #1.5 # Drag Coefficient (~0.75-0.8 for flat sheet, 1.5-1.75 for domed chute)
+        stage2DelayTime     0.1 #s
+	}
+
+
+CameraTube{
+		length			0.30226
+		class			Bodytube
+		cg				(0 0 -0.15113)
+		position		(0 0 -1.08331)
+		mass			1.0602 #0.55
+		outerDiameter	0.167
+		surfaceRoughness	0.000007
+	}
+
+
+CameraAssembly{
+		class			Mass
+		mass			0.293
+		position		(0 0 -1.1926)
+		cg				(0 0 0)
+		MOI				(0.00056 0.00034 0.00062)
+	}
+
+# AirbrakesForce{
+#         # Acts like an AeroForce object, but all coefficients are interpolated from a table instead of constants
+#         class           TabulatedAeroForce
+#         position        (0 0 -1.4094)
+#         Aref            0.008757 #todo
+#         Lref            0.25#todo
+#         # File should be a .csv file containing columns of 'key' data followed by columns of 'value' data (Key columns must be named: 
+#             # Mach, Altitude, UnitReynolds, AOA, or RollAngle - defined in MAPLEAF/Rocket/AeroFunctions.stringToAeroFunctionMap)
+#             # (Value data columns must be named: CD, CL, CMx, CMy, or CMz    
+#         # Files can have as many of those 'key' and 'value' columns as desired, 
+#                 # but interpolation will slow down as dimensionality (number of key columns) increases
+#         # First row of the file needs to be a header listing each column name - each column name has to match one of the above 'key' or 'value' columns
+#             # Example header for interpolating Cd based on Mach number: 'Mach,Cd'
+#         filePath        C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\TabulatedData\Airbrakes2.csv
+#         }
+
+AirbrakesTube{
+		length			0.071374
+		class			Bodytube
+		position	(0 0 -1.38557)
+		cg			(0 0 -0.1)
+		mass			0 
+		outerDiameter		0.167
+		surfaceRoughness	0.000007 #resin finish
+	}
+
+Airbrakes{
+		class			Mass
+		mass			1.727
+		position	(0 0 -1.38557)
+		cg				(0 0 -0.4313)
+		MOI				(0.0056, 0.00549, 0.00943) #(0.01891858177 0.01891858177 0.01122641116)
+	}
+
+AvionicsTube+UpperPlumbing{
+		length			0.65532 # 0.353 + 0.158 added for lower plumbing
+		class			Bodytube
+		cg				(0 0 -0.2664206)
+		position		(0 0 -1.456944)
+		mass			1.2218
+		outerDiameter	0.167
+		surfaceRoughness	0.000007
+	}
+
+Avionics{
+		class			Mass
+		mass			3.544 #2.5 for avionics + 1.5 for upper plumbing
+		position		(0 0 -1.456944)
+		cg				(0 0 -0.350796)
+		MOI				(0.04804 0.04921 0.00845)
+	}
+UpperPlumbing{
+	class			Mass
+	mass			0.68
+	cg				(0 0 0)
+	position		(0 0 -2.07707)
+	MOI				(0.00294 0.00287 0.00261)
+	}
+
+UpperPVCasing{
+		length			0.009525 # 0.353 + 0.158 added for lower plumbing
+		class			Bodytube
+		cg				(0 0 -0.014186)
+		position		(0 0 -2.112264)
+		mass			0.419
+		outerDiameter	0.167
+		surfaceRoughness	0.000007
+	}
+
+UpperPVBulkhead{
+		class			Mass
+		mass			0.449 #cad
+		position		(0 0 -2.14330) 
+		cg				(0 0 0)
+		MOI				(0.00095 0.00095 0.00174)
+	}
+
+
+PressureVessel{
+		length			0.813
+		class			Bodytube
+		cg			(0 0 -0.4065)
+		position	(0 0 -2.121789)
+		mass			5.7007#6.1 #8.8
+		outerDiameter		0.167
+		surfaceRoughness	0.000143
+		MOI 			(0.422204 0.422204 0.172753)
+	}
+
+LowerPVCasing{
+		length			0.009525 # 0.353 + 0.158 added for lower plumbing
+		class			Bodytube
+		cg				(0 0 0.004576572)
+		position		(0 0 -2.934789)
+		mass			0.419
+		outerDiameter	0.167
+		surfaceRoughness	0.000007
+	}
+LowerPVBulkhead{
+		class			Mass
+		mass			0.4846 #cad
+		position		(0 0 -2.916) 
+		cg				(0 0 0)
+		MOI				(0.00097 0.00097 0.00170)
+	}
+
+LowerPlumbingTube{
+		class		Bodytube
+		length		0.235531
+		cg			(0 0 -0.1177655)
+		position	(0 0 -2.944314)
+		mass		0.745 #with radax
+		outerDiameter	0.167
+		surfaceRoughness	0.000007
+	}
+
+FinCan+CC+MoterLiner{
+		class		Bodytube
+		length		0.635
+		cg			(0 0 -0.3175)
+		position	(0 0 -3.179845)
+		mass		6.5
+		outerDiameter	0.167
+		surfaceRoughness	0.000007
+	}
+
+LowerPlumbing{
+	class		Mass
+	mass		2.765
+	position	(0 0 0)
+	cg			(0 0 -3.05534)
+	MOI			(0.01179 0.01223 0.00261)
+	}
+
+LowerInjectorBulkhead{
+		class			Mass
+		mass			0.3585
+		position		(0 0 -3.11538)
+		cg				(0 0 0)
+		MOI				(0.00057 0.00057 0.00104)
+	}
+
+Mixingplate{
+		class			Mass
+		mass			0.263
+		position	(0 0 -3.6406)
+		cg				(0 0 0)
+		MOI				(0.00033 0.00033 0.00064)
+	}
+
+Nozzle+Houseing{
+		class			Mass
+		mass			1.955
+		position	(0 0 -3.7886)
+		cg				(0 0 0)
+		MOI				(0.00412 0.00412 0.00643)
+	}
+
+
+DeltaFins{
+	class			FinSet
+	mass			2.2
+	position			(0 0 -3.339)
+	cg			(0 0 -0.075)
+	numFins			3
+	finCantAngle			0
+	firstFinAngle			0
+	sweepAngle			53
+	rootChord			0.45
+	tipChord			0.264
+	span			0.14
+	thickness			0.014478 #0.011938# 0.47 inches #0.008128 #0.009906
+	surfaceRoughness			0.000007
+
+    LeadingEdge{
+        shape         Round # Blunt or Round (Even sharp edges always have a small radius)
+        #thickness     0.00931 # Used for 'Blunt' edge
+        radius        0.007239 # Used for 'Round' edge
+    }
+
+    TrailingEdge{
+        shape         Round # Tapered (0 base drag), Round (1/2 base drag), Blunt (full base drag)
+        #thickness     0.001 # Used for 'Blunt' edge
+        radius        0.007239 # Used for 'Round' edge
+    }
+	}
+
+Motor{
+        class           Motor
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\skib.txt
+		path			c:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\3p25-10k.txt
+		#path		    C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\3p25-12k.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\3p75-12k.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\3p75-10k.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\AegisCase167.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\AegisCase67.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\AegisCase4.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\Aegis4KNXXSB.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\AegisXXKN5SB.txt	
+		#path		    C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\AegisXXKN4SB.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\Aegis4KN3SB.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\Aegis3P5KN4SB.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\Aegis3P5KN5SB.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR2\Lib\site-packages\MAPLEAF\Examples\Motors\Aegis3P5KN5SB.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Aegis3P75SB.txt
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\WizgodMotor4kN4sb.txt
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro4P25SBSAC.txt
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro4P5SBSAC.txt
+		#path			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P75SB.txt #test
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P625SB 2.txt
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\ouroboros7SecondBurn.txt
+		#path 			C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P625SB 2.txt
+		#path			 C:\Users\taiya\anaconda3\envs\SOAR\Lib\site-packages\MAPLEAF\Examples\Motors\Ouro3P625SB 1.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\OuroSF25SB.txt			
+    	#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro3SB.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\MayMotor.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro4SBSAC.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\pls.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro3P75SB.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro3P625SB.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro11SB.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\SACMotor.txt
+		#path            C:\Users\zackg\Documents\Coding\MAPLEAF-master\MAPLEAF\Examples\Motors\Ouro8SB.txt
+  }
+}
+}
+
+#todo
+
+#better airbrakes implementation - currently just a tube with a tabulated aero force, but could be modeled more accurately with separate surfaces for the different airbrakes and a mechanism to deploy them at the correct time
